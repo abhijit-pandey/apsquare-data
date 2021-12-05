@@ -287,6 +287,8 @@ def process_df(df):
 
 
 def get_for_bt(d,t):
+    if t.upper()=='NIFTY':
+        t = '^NSEI'
     df = get_data_date(t,START=datetime.datetime.strptime(d,'%Y-%m-%d')-datetime.timedelta(days=450),END=datetime.datetime.strptime(d,'%Y-%m-%d')+datetime.timedelta(days=1)) #REMOVE TODAY.date() as END
     row = process_df(df)
     row['NAME'] = t
@@ -306,10 +308,15 @@ def get_for_bt(d,t):
         row['Risk_to_Reward'] = round((row['Close']-row['Stoploss'])/(row['Target']-row['Close']), 2)
     except:
         row['Risk_to_Reward'] = None
-        
+    row['Chart'] = f'<a class="w3-button" href="/chart/{t}" target="_blank"><button class="w3-button w3-white w3-border w3-border-green w3-round-large">Chart</button></a>'
     return pd.DataFrame([row])
 
-
+def get_bt_for_date(d):
+    nif50 = get_nifty50_stocks()['NSE Symbol'].to_list()
+    f = pd.DataFrame()
+    for t in nif50:
+        f = f.append(get_for_bt(d,t))
+    return f
 # In[91]:
 
 
@@ -385,11 +392,14 @@ def recommendations():
 def backtest():
     t = request.args.get('Ticker')
     d = request.args.get('Date')
-    if t is None or d is None:
+    if t is None and d is None:
         return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template('header_backtest.html'))
-    dfs = get_for_bt(d,t)
+    if d is not None and (t is None or t==''):
+        dfs = get_bt_for_date(d)
+    else:
+        dfs = get_for_bt(d,t)
 #     print(dfs)
-    dfs = dfs[cols]
+    dfs = dfs[dfs.Action.notnull()][cols]
 #     for i in ['Support_Level','Target','Stoploss','Resistance_Level','Expected_Within','Close']:
 #         dfs[i] = dfs[i].astype(int)
     s = dfs.style.format().hide_index()
@@ -399,7 +409,7 @@ def backtest():
 
 @app.route('/chart/<eq>')
 def return_chart(eq):
-    if os.path.exists(f'templates/{eq.upper()}.html'):
+    if os.path.exists(f'templates/plots/{eq.upper()}.html'):
         return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template(f'{eq.upper()}.html'))
     pltdf = get_data_date(eq,str((TODAY-datetime.timedelta(days=100)).date()))
     fig = go.Figure(data=[go.Candlestick(x=pltdf['Date'],
@@ -409,10 +419,10 @@ def return_chart(eq):
                     close=pltdf['Close'])])
     fig.add_hline(y=pltdf.iloc[-1].Close, line_color='orange', annotation_text='Current Price')
     fig.update_layout(xaxis_rangeslider_visible=False)
-    pio.write_html(fig,file=f'templates/{eq.upper()}.html')
+    pio.write_html(fig,file=f'templates/plots/{eq.upper()}.html')
     return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template(f'{eq.upper()}.html'))
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5002,debug=True,use_reloader=False)
+    app.run(host='0.0.0.0', port=5002,debug=True)
 
 
 # In[ ]:
