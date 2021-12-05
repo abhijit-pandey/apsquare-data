@@ -361,6 +361,14 @@ def home_null():
 def home():
     return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template('header_home.html'))
 
+@app.route('/options')
+def options():
+    return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template('Coming_Soon.html'))
+
+@app.route('/account')
+def account():
+    return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template('Coming_Soon.html'))
+
 @app.route('/recommendations')
 def recommendations():
     global df
