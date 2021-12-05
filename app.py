@@ -373,6 +373,8 @@ def recommendations():
 def backtest():
     t = request.args.get('Ticker')
     d = request.args.get('Date')
+    if t is None or d is None:
+        return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template('header_backtest.html'))
     dfs = get_for_bt(d,t)
 #     print(dfs)
     dfs = dfs[cols]
