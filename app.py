@@ -381,8 +381,8 @@ def backtest():
     s = dfs.style.format().hide_index()
     s = s.set_table_attributes('class="w3-table w3-hoverable"').render()
     return render_template('index_template.html', RECOM_TABLE=s, HEADER= render_template('header_backtest.html'))
-
-app.run(host='0.0.0.0', debug=True, use_reloader=False)
+if __name__ == '__main__':
+    app.run()
 
 
 # In[ ]:
