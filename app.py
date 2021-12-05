@@ -354,6 +354,9 @@ from flask import Flask, render_template, jsonify, request
 app = Flask(__name__)
 cols = ['Date','NAME', 'Support_Level', 'Resistance_Level','Action','Close','Target','Stoploss','Expected_Within','Risk_to_Reward']
 
+@app.route('/')
+def home():
+    return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template('header_home.html'))
 @app.route('/home')
 def home():
     return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template('header_home.html'))
