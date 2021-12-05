@@ -342,9 +342,8 @@ for eq in nif50:
     except:
         row['Risk_to_Reward'] = None
 
-    row['Chart'] = f'<button class="btn btn-success" onclick=" window.open("/chart/{eq}","_blank")"> Google</button>'
+    row['Chart'] = f'<a class="w3-button" href="/chart/{eq}" target="_blank"><button class="w3-button w3-white w3-border w3-border-green w3-round-large">Chart</button></a>'
     final.append(row)
-    
 df = pd.DataFrame(final)
 
 
@@ -354,7 +353,7 @@ df = pd.DataFrame(final)
 from flask import Flask, render_template, jsonify, request
 
 app = Flask(__name__)
-cols = ['Date','NAME', 'Support_Level', 'Resistance_Level','Action','Close','Target','Stoploss','Expected_Within','Risk_to_Reward']
+cols = ['Date','NAME', 'Support_Level', 'Resistance_Level','Action','Close','Target','Stoploss','Expected_Within','Risk_to_Reward','Chart']
 
 @app.route('/')
 def home_null():
@@ -413,7 +412,7 @@ def return_chart(eq):
     pio.write_html(fig,file=f'templates/{eq.upper()}.html')
     return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template(f'{eq.upper()}.html'))
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=5002,debug=True,use_reloader=False)
 
 
 # In[ ]:
