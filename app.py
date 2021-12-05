@@ -396,10 +396,12 @@ def backtest():
         return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template('header_backtest.html'))
     if d is not None and (t is None or t==''):
         dfs = get_bt_for_date(d)
+        dfs = dfs[dfs.Action.notnull()][cols]
     else:
         dfs = get_for_bt(d,t)
+        dfs = dfs[cols]
 #     print(dfs)
-    dfs = dfs[dfs.Action.notnull()][cols]
+    
 #     for i in ['Support_Level','Target','Stoploss','Resistance_Level','Expected_Within','Close']:
 #         dfs[i] = dfs[i].astype(int)
     s = dfs.style.format().hide_index()
