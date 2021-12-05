@@ -341,6 +341,8 @@ for eq in nif50:
         row['Risk_to_Reward'] = round((row['Close']-row['Stoploss'])/(row['Target']-row['Close']), 2)
     except:
         row['Risk_to_Reward'] = None
+
+    row['Chart'] = f'<button class="btn btn-success" onclick=" window.open("/chart/{eq}","_blank")"> Google</button>'
     final.append(row)
     
 df = pd.DataFrame(final)
@@ -394,6 +396,22 @@ def backtest():
     s = dfs.style.format().hide_index()
     s = s.set_table_attributes('class="w3-table w3-hoverable"').render()
     return render_template('index_template.html', RECOM_TABLE=s, HEADER= render_template('header_backtest.html'))
+
+
+@app.route('/chart/<eq>')
+def return_chart(eq):
+    if os.path.exists(f'templates/{eq.upper()}.html'):
+        return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template(f'{eq.upper()}.html'))
+    pltdf = get_data_date(eq,str((TODAY-datetime.timedelta(days=100)).date()))
+    fig = go.Figure(data=[go.Candlestick(x=pltdf['Date'],
+                    open=pltdf['Open'],
+                    high=pltdf['High'],
+                    low=pltdf['Low'],
+                    close=pltdf['Close'])])
+    fig.add_hline(y=pltdf.iloc[-1].Close, line_color='orange', annotation_text='Current Price')
+    fig.update_layout(xaxis_rangeslider_visible=False)
+    pio.write_html(fig,file=f'templates/{eq.upper()}.html')
+    return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template(f'{eq.upper()}.html'))
 if __name__ == '__main__':
     app.run()
 
