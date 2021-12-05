@@ -413,7 +413,7 @@ def backtest():
 def return_chart(eq):
     if os.path.exists(f'templates/plots/{eq.upper()}.html'):
         return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template(f'plots/{eq.upper()}.html'))
-    pltdf = get_data_date(eq,str((TODAY-datetime.timedelta(days=100)).date()))
+    pltdf = get_data_date(eq,str((TODAY-datetime.timedelta(days=370)).date()))
     fig = go.Figure(data=[go.Candlestick(x=pltdf['Date'],
                     open=pltdf['Open'],
                     high=pltdf['High'],
