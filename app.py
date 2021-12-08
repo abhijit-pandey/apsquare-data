@@ -409,6 +409,12 @@ def backtest():
     return render_template('index_template.html', RECOM_TABLE=s, HEADER= render_template('header_backtest.html'))
 
 
+@app.route('/refresh')
+def refresh():
+    global df
+    df = get_bt_for_date(str(TODAY.date()))
+    return recommendations()
+
 @app.route('/chart/<eq>')
 def return_chart(eq):
     if os.path.exists(f'templates/plots/{eq.upper()}.html'):
