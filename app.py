@@ -427,7 +427,7 @@ def return_chart(eq):
                         low=pltdf['Low'],
                         close=pltdf['Close'])])
         fig.add_hline(y=pltdf.iloc[-1].Close, line_color='orange', annotation_text='Current Price')
-        fig.update_layout(xaxis_rangeslider_visible=False)
+        fig.update_layout(xaxis_rangeslider_visible=True)
         pio.write_html(fig,file=f'templates/plots/{eq.upper()}.html')
         return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template(f'plots/{eq.upper()}.html'))
     finally:
