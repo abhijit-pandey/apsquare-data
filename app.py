@@ -63,6 +63,15 @@ def get_data_date(SYM, START=None, END=None):
     return df
 
 
+WIN_RATE = pd.read_csv('WinRate.csv')
+def get_win_rate(df):
+    global WIN_RATE
+    if len(df)==0:
+        df['Up_Probability'] = None
+        return df
+    df['Up_Probability'] = df.apply(lambda x :  WIN_RATE[(WIN_RATE.Trend==x.Trend)&(WIN_RATE.Trigger_Type==x.Trigger_Type)].Up_Probability.mean(),axis=1)
+    return df
+
 # In[80]:
 
 
@@ -360,7 +369,7 @@ df = pd.DataFrame(final)
 from flask import Flask, render_template, jsonify, request
 
 app = Flask(__name__)
-cols = ['Date','NAME', 'Support_Level', 'Resistance_Level','Action','Close','Target','Stoploss','Expected_Within','Risk_to_Reward','Chart']
+cols = ['Date','NAME', 'Support_Level', 'Resistance_Level','Action','Close','Target','Stoploss','Expected_Within','Up_Probability','Risk_to_Reward','Chart']
 
 @app.route('/')
 def home_null():
@@ -380,7 +389,7 @@ def account():
 @app.route('/recommendations')
 def recommendations():
     global df
-    dfs = df[df.Action.notnull()][cols]
+    dfs = get_win_rate(df[df.Action.notnull()].copy())[cols]
     for i in ['Support_Level','Target','Stoploss','Resistance_Level','Expected_Within','Close']:
         dfs[i] = dfs[i].astype(int)
     s = dfs.style.format().hide_index()
@@ -396,10 +405,10 @@ def backtest():
         return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template('header_backtest.html'))
     if d is not None and (t is None or t==''):
         dfs = get_bt_for_date(d)
-        dfs = dfs[dfs.Action.notnull()][cols]
+        dfs = get_win_rate(dfs[dfs.Action.notnull()].copy())[cols]
     else:
         dfs = get_for_bt(d,t)
-        dfs = dfs[cols]
+        dfs = get_win_rate(dfs)[cols]
 #     print(dfs)
     
 #     for i in ['Support_Level','Target','Stoploss','Resistance_Level','Expected_Within','Close']:
@@ -433,7 +442,7 @@ def return_chart(eq):
     finally:
         os.remove(f'templates/plots/{eq.upper()}.html')
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5002,debug=True)
+    app.run(host='0.0.0.0', port=5002,debug=False)
 
 
 # In[ ]:
