@@ -403,11 +403,11 @@ def options():
     ed = request.args.get('EDate')
     N = ['^NSEI']+list(get_nifty50_stocks()['NSE Symbol'])
     f = {'Date' :[],'TICKER':[], 'Mean':[], 'Std':[], 'Within_1SD':[], 'Price':[], 'Up_Side':[], 'Down_Side':[]}
-    if d is None:
+    if d is None or d=='':
         DATE = TODAY
     else:
         DATE = datetime.datetime.strptime(d,'%Y-%m-%d')
-    if ed is None:
+    if ed is None or ed=='':
         EXPIRY = get_last_thursday(DATE.date())
     else:
         EXPIRY = datetime.datetime.strptime(ed, '%Y-%m-%d').date()
