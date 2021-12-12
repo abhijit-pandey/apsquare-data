@@ -19,7 +19,18 @@ print(TODAY)
 
 
 # In[79]:
-
+def get_last_thursday(TODAY = datetime.datetime.today().date()):
+    if isinstance(TODAY,str):
+        TODAY = datetime.datetime.strptime(TODAY, '%Y-%m-%d').date()
+    days_to_THU = 10 - TODAY.weekday()
+    point_date = TODAY + datetime.timedelta(days=days_to_THU)
+    while(True):
+        if (point_date+datetime.timedelta(days=7)).month==TODAY.month:
+            point_date = point_date+datetime.timedelta(days=7)
+        else:
+            Last_Thursday = point_date
+            break
+    return Last_Thursday
 
 def get_nifty50_stocks():
     #PROCESS AND LOAD NIFTY 50 DATA
@@ -43,6 +54,7 @@ def get_data_date(SYM, START=None, END=None):
     df.reset_index(inplace=True)
 
     #RESISTANCE/SUPPORT FINDING
+    df['Change'] = (df.Close - df.Close.shift(1))/df.Close
     df['Topline'] = df.apply(lambda x : x.Open if x.Open>x.Close else x.Close, axis=1)
     df['Bottomline'] = df.apply(lambda x : x.Open if x.Open<x.Close else x.Close, axis=1)
 
@@ -62,6 +74,13 @@ def get_data_date(SYM, START=None, END=None):
     
     return df
 
+def get_price(SYM, DATE=None):
+    if DATE is None:
+        DATE = datetime.datetime.today().date()-datetime.timedelta(days=1)
+    else:
+        DATE = datetime.datetime.strptime(DATE,'%Y-%m-%d').date()
+    df = get_data_date('INFY',str(DATE),str(DATE+datetime.timedelta(days=1)))
+    return df.iloc[-1].Close
 
 WIN_RATE = pd.read_csv('WinRate.csv')
 def get_win_rate(df):
@@ -380,7 +399,37 @@ def home():
 
 @app.route('/options')
 def options():
-    return render_template('index_template.html', RECOM_TABLE='', HEADER= render_template('Coming_Soon.html'))
+    d = request.args.get('Date')
+    ed = request.args.get('EDate')
+    N = ['^NSEI']+list(get_nifty50_stocks()['NSE Symbol'])
+    f = {'Date' :[],'TICKER':[], 'Mean':[], 'Std':[], 'Within_1SD':[], 'Price':[], 'Up_Side':[], 'Down_Side':[]}
+    if d is None:
+        DATE = TODAY
+    else:
+        DATE = datetime.datetime.strptime(d,'%Y-%m-%d')
+    if ed is None:
+        EXPIRY = get_last_thursday(DATE.date())
+    else:
+        EXPIRY = datetime.datetime.strptime(ed, '%Y-%m-%d').date()
+    DAYS_TO_EXPIRY = (EXPIRY-DATE.date()).days
+    TDE = np.busday_count(str(DATE.date()), str(EXPIRY))
+    for s in N:
+        print(f'Going for {s}           ',end='\r')
+        dft = get_data_date(s, (DATE-datetime.timedelta(days=366)).date(), (DATE+datetime.timedelta(days=1)).date())
+        f['Date'].append(dft.iloc[-1].Date)
+        f['TICKER'].append(s)
+        f['Mean'].append(round(dft.Change.mean()*100,2))
+        f['Std'].append(round(dft.Change.std()*100,2)) 
+        f['Price'].append(round(dft.iloc[-1].Close, 2))
+        f['Up_Side'].append(round(dft.iloc[-1].Close*(1 + ((TDE*dft.Change.mean())+(TDE**0.5)*dft.Change.std())),2))
+        f['Down_Side'].append(round(dft.iloc[-1].Close*(1 - ((TDE*dft.Change.mean())+(TDE**0.5)*dft.Change.std())),2))
+        
+        f['Within_1SD'].append(dft[(dft.Change.mean()-dft.Change.std()<=dft.Change)&(dft.Change<=dft.Change.mean()+dft.Change.std())].Change.count()/len(dft))
+    dft = pd.DataFrame(f)
+    s = dft.style.format().hide_index()
+    s = s.set_table_attributes('class="w3-table w3-hoverable"').render()
+    return render_template('index_template.html', RECOM_TABLE=s, 
+                           HEADER= render_template('header_options.html'))
 
 @app.route('/account')
 def account():
