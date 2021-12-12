@@ -402,7 +402,7 @@ def options():
     d = request.args.get('Date')
     ed = request.args.get('EDate')
     N = ['^NSEI']+list(get_nifty50_stocks()['NSE Symbol'])
-    f = {'Date' :[],'TICKER':[], 'Mean':[], 'Std':[], 'Within_1SD':[], 'Price':[], 'Up_Side':[], 'Down_Side':[]}
+    f = {'Date' :[],'Expiry' :[],'TICKER':[], 'Mean':[], 'Std':[], 'Within_1SD':[], 'Price':[], 'Up_Side':[], 'Down_Side':[]}
     if d is None or d=='':
         DATE = TODAY
     else:
@@ -417,6 +417,7 @@ def options():
         print(f'Going for {s}           ',end='\r')
         dft = get_data_date(s, (DATE-datetime.timedelta(days=366)).date(), (DATE+datetime.timedelta(days=1)).date())
         f['Date'].append(dft.iloc[-1].Date)
+        f['Expiry'].append(str(EXPIRY))
         f['TICKER'].append(s)
         f['Mean'].append(round(dft.Change.mean()*100,2))
         f['Std'].append(round(dft.Change.std()*100,2)) 
